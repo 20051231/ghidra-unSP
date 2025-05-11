@@ -1476,48 +1476,51 @@ define token extinstr(16)
 attach variables [ extRa extRb ] [ sp r1 r2 r3 r4 bp sr pc r8 r9 r10 r11 r12 r13 r14 r15 ];
 attach variables [ extRx extRy ] [ r8 r9 r10 r11 r12 r13 r14 r15 ];
 
-extOpA: extRx is extRx { export extRx; }
-extOpB: extRy is extRy { export extRy; }
+extOpA: extRa is extRa { export extRa; }
+extOpB: extRb is extRb { export extRb; }
+
+extOpX: extRx is extRx { export extRx; }
+extOpY: extRy is extRy { export extRy; }
 
 # Ext ALU6
 
-ExtIndirectOp: ""[extOpB] is extOpN=0 & extOpB {
-    export *:2 extOpB;
+ExtIndirectOp: ""[extOpY] is extOpN=0 & extOpY {
+    export *:2 extOpY;
 } 
-ExtIndirectOp: ""[extOpB--] is extOpN=1 & extOpB {
-    local tmp = extOpB;
-    extOpB = extOpB - 1;
+ExtIndirectOp: ""[extOpY--] is extOpN=1 & extOpY {
+    local tmp = extOpY;
+    extOpY = extOpY - 1;
     export *:2 tmp;
 } 
-ExtIndirectOp: ""[extOpB++] is extOpN=2 & extOpB {
-    local tmp = extOpB;
-    extOpB = extOpB + 1;
+ExtIndirectOp: ""[extOpY++] is extOpN=2 & extOpY {
+    local tmp = extOpY;
+    extOpY = extOpY + 1;
     export *:2 tmp;
 } 
-ExtIndirectOp: ""[++extOpB] is extOpN=3 & extOpB {
-    extOpB = extOpB + 1;
-    export *:2 extOpB;
+ExtIndirectOp: ""[++extOpY] is extOpN=3 & extOpY {
+    extOpY = extOpY + 1;
+    export *:2 extOpY;
 } 
-ExtIndirectOp: "ds":[extOpB] is extOpN=4 & extOpB {
-    local addr:3 = segment(ds, extOpB);
+ExtIndirectOp: "ds":[extOpY] is extOpN=4 & extOpY {
+    local addr:3 = segment(ds, extOpY);
     export *:2 addr;
 } 
-ExtIndirectOp: "ds":[extOpB--] is extOpN=5 & extOpB {
-    local addr:3 = segment(ds, extOpB);
-    ds = ds - sborrow(extOpB, 1);
-    extOpB = extOpB - 1;
+ExtIndirectOp: "ds":[extOpY--] is extOpN=5 & extOpY {
+    local addr:3 = segment(ds, extOpY);
+    ds = ds - sborrow(extOpY, 1);
+    extOpY = extOpY - 1;
     export *:2 addr;
 } 
-ExtIndirectOp: "ds":[extOpB++] is extOpN=6 & extOpB {
-    local addr:3 = segment(ds, extOpB);
-    ds = ds + scarry(extOpB, 1);
-    extOpB = extOpB + 1;
+ExtIndirectOp: "ds":[extOpY++] is extOpN=6 & extOpY {
+    local addr:3 = segment(ds, extOpY);
+    ds = ds + scarry(extOpY, 1);
+    extOpY = extOpY + 1;
     export *:2 addr;
 } 
-ExtIndirectOp: "ds":[++extOpB] is extOpN=7 & extOpB {
-    ds = ds + scarry(extOpB, 1);
-    extOpB = extOpB + 1;
-    local addr:3 = segment(ds, extOpB);
+ExtIndirectOp: "ds":[++extOpY] is extOpN=7 & extOpY {
+    ds = ds + scarry(extOpY, 1);
+    extOpY = extOpY + 1;
+    local addr:3 = segment(ds, extOpY);
     export *:2 addr;
 }
 ExtALU6BaseDisplacement: ["bp"+extIM6] is extIM6 {
@@ -1560,37 +1563,37 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
 # r8 = r8 + [r9]
 # r8 = r8 + ds:[r9]
 # Ext DS_Indirect 
-:^extOpA += ExtIndirectOp is ExtPrefix ; (extOp0=0 & extOp2=2 & extOpA & ExtIndirectOp) {
-    local origExtOpA:2 = extOpA;
-    extOpA = extOpA + ExtIndirectOp;
-    setResultFlags(extOpA);
-    setAddFlags(origExtOpA, ExtIndirectOp);
+:^extOpX += ExtIndirectOp is ExtPrefix ; (extOp0=0 & extOp2=2 & extOpX & ExtIndirectOp) {
+    local origExtOpX:2 = extOpX;
+    extOpX = extOpX + ExtIndirectOp;
+    setResultFlags(extOpX);
+    setAddFlags(origExtOpX, ExtIndirectOp);
 }
 # r8 = r8 + imm
 # Ext IM6 
-:^extOpA += extIM6 is ExtIndirectOp ; (extOp0=0 & extOp2=6 & extOpA & extIM6) {
-    local extOrigOpA:2 = extOpA;
-    extOpA = extOpA + extIM6;
-    setResultFlags(extOpA);
-    setAddFlags(extOrigOpA, extIM6);
+:^extOpX += extIM6 is ExtIndirectOp ; (extOp0=0 & extOp2=6 & extOpX & extIM6) {
+    local extOrigOpX:2 = extOpX;
+    extOpX = extOpX + extIM6;
+    setResultFlags(extOpX);
+    setAddFlags(extOrigOpX, extIM6);
 }
 
 # r8 = r8 + [bp + 0]
 # Ext Base+Disp6
-:^extOpA += ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=0 & extOp2=3 & extOpA & ExtALU6BaseDisplacement) {
-    local extOrigOpA:2 = extOpA;
-    extOpA = extOpA + ExtALU6BaseDisplacement;
-    setResultFlags(extOpA);
-    setAddFlags(extOrigOpA, ExtALU6BaseDisplacement);
+:^extOpX += ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=0 & extOp2=3 & extOpX & ExtALU6BaseDisplacement) {
+    local extOrigOpX:2 = extOpX;
+    extOpX = extOpX + ExtALU6BaseDisplacement;
+    setResultFlags(extOpX);
+    setAddFlags(extOrigOpX, ExtALU6BaseDisplacement);
 }
 
 # r8 = r8 + [bp + 0]
 # Ext A6
-:^extOpA += ExtALU6Mem is ExtIndirectOp ; (extOp0=0 & extOp2=7 & extOpA & ExtALU6Mem) {
-    local extOrigOpA:2 = extOpA;
-    extOpA = extOpA + ExtALU6Mem;
-    setResultFlags(extOpA);
-    setAddFlags(extOrigOpA, ExtALU6Mem);
+:^extOpX += ExtALU6Mem is ExtIndirectOp ; (extOp0=0 & extOp2=7 & extOpX & ExtALU6Mem) {
+    local extOrigOpX:2 = extOpX;
+    extOpX = extOpX + ExtALU6Mem;
+    setResultFlags(extOpX);
+    setAddFlags(extOrigOpX, ExtALU6Mem);
 }
 
 
@@ -1631,38 +1634,38 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
 # r8 = r8 + [r9], carry
 # r8 = r8 + ds:[r9], carry
 # Ext DS_Indirect 
-:^extOpA += ExtIndirectOp, "carry" is ExtPrefix ; (extOp0=1 & extOp2=2 & extOpA & ExtIndirectOp) {
-    local origExtOpA:2 = extOpA;
-    extOpA = extOpA + ExtIndirectOp + zext(C_flag);
-    setResultFlags(extOpA);
-    setAddCarryFlags(origExtOpA, ExtIndirectOp);
+:^extOpX += ExtIndirectOp, "carry" is ExtPrefix ; (extOp0=1 & extOp2=2 & extOpX & ExtIndirectOp) {
+    local origExtOpX:2 = extOpX;
+    extOpX = extOpX + ExtIndirectOp + zext(C_flag);
+    setResultFlags(extOpX);
+    setAddCarryFlags(origExtOpX, ExtIndirectOp);
 }
 
 # r8 = r8 + imm, carry
 # Ext IM6 
-:^extOpA += extIM6, "carry" is ExtIndirectOp ; (extOp0=1 & extOp2=6 & extOpA & extIM6) {
-    local extOrigOpA:2 = extOpA;
-    extOpA = extOpA + extIM6 + zext(C_flag);
-    setResultFlags(extOpA);
-    setAddCarryFlags(extOrigOpA, extIM6);
+:^extOpX += extIM6, "carry" is ExtIndirectOp ; (extOp0=1 & extOp2=6 & extOpX & extIM6) {
+    local extOrigOpX:2 = extOpX;
+    extOpX = extOpX + extIM6 + zext(C_flag);
+    setResultFlags(extOpX);
+    setAddCarryFlags(extOrigOpX, extIM6);
 }
 
 # r8 = r8 + [bp + 0], carry
 # Ext Base+Disp6
-:^extOpA += ExtALU6BaseDisplacement, "carry" is ExtIndirectOp ; (extOp0=1 & extOp2=3 & extOpA & ExtALU6BaseDisplacement) {
-    local extOrigOpA:2 = extOpA;
-    extOpA = extOpA + ExtALU6BaseDisplacement + zext(C_flag);
-    setResultFlags(extOpA);
-    setAddCarryFlags(extOrigOpA, ExtALU6BaseDisplacement);
+:^extOpX += ExtALU6BaseDisplacement, "carry" is ExtIndirectOp ; (extOp0=1 & extOp2=3 & extOpX & ExtALU6BaseDisplacement) {
+    local extOrigOpX:2 = extOpX;
+    extOpX = extOpX + ExtALU6BaseDisplacement + zext(C_flag);
+    setResultFlags(extOpX);
+    setAddCarryFlags(extOrigOpX, ExtALU6BaseDisplacement);
 }
 
 # r8 = r8 + [0], carry
 # Ext A6
-:^extOpA += ExtALU6Mem, "carry" is ExtIndirectOp ; (extOp0=1 & extOp2=7 & extOpA & ExtALU6Mem) {
-    local extOrigOpA:2 = extOpA;
-    extOpA = extOpA + ExtALU6Mem + zext(C_flag);
-    setResultFlags(extOpA);
-    setAddCarryFlags(extOrigOpA, ExtALU6Mem);
+:^extOpX += ExtALU6Mem, "carry" is ExtIndirectOp ; (extOp0=1 & extOp2=7 & extOpX & ExtALU6Mem) {
+    local extOrigOpX:2 = extOpX;
+    extOpX = extOpX + ExtALU6Mem + zext(C_flag);
+    setResultFlags(extOpX);
+    setAddCarryFlags(extOrigOpX, ExtALU6Mem);
 }
 
 
@@ -1703,38 +1706,38 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
 # r8 -= [r9]
 # r8 -= ds:[r9]
 # Ext DS_Indirect 
-:^extOpA -= ExtIndirectOp is ExtPrefix ; (extOp0=2 & extOp2=2 & extOpA & ExtIndirectOp) {
-    local origExtOpA:2 = extOpA;
-    extOpA = extOpA - ExtIndirectOp;
-    setResultFlags(extOpA);
-    setSubtractFlags(origExtOpA, ExtIndirectOp);
+:^extOpX -= ExtIndirectOp is ExtPrefix ; (extOp0=2 & extOp2=2 & extOpX & ExtIndirectOp) {
+    local origExtOpX:2 = extOpX;
+    extOpX = extOpX - ExtIndirectOp;
+    setResultFlags(extOpX);
+    setSubtractFlags(origExtOpX, ExtIndirectOp);
 }
 
 # r8 -= imm6
 # Ext IM6 
-:^extOpA -= extIM6 is ExtIndirectOp ; (extOp0=2 & extOp2=6 & extOpA & extIM6) {
-    local extOrigOpA:2 = extOpA;
-    extOpA = extOpA - extIM6;
-    setResultFlags(extOpA);
-    setSubtractFlags(extOrigOpA, extIM6);
+:^extOpX -= extIM6 is ExtIndirectOp ; (extOp0=2 & extOp2=6 & extOpX & extIM6) {
+    local extOrigOpX:2 = extOpX;
+    extOpX = extOpX - extIM6;
+    setResultFlags(extOpX);
+    setSubtractFlags(extOrigOpX, extIM6);
 }
 
 # r8 -= [bp + imm6]
 # Ext Base+Disp6
-:^extOpA -= ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=2 & extOp2=3 & extOpA & ExtALU6BaseDisplacement) {
-    local extOrigOpA:2 = extOpA;
-    extOpA = extOpA - ExtALU6BaseDisplacement;
-    setResultFlags(extOpA);
-    setSubtractFlags(extOrigOpA, ExtALU6BaseDisplacement);
+:^extOpX -= ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=2 & extOp2=3 & extOpX & ExtALU6BaseDisplacement) {
+    local extOrigOpX:2 = extOpX;
+    extOpX = extOpX - ExtALU6BaseDisplacement;
+    setResultFlags(extOpX);
+    setSubtractFlags(extOrigOpX, ExtALU6BaseDisplacement);
 }
 
 # r8 -= [imm6]
 # Ext A6
-:^extOpA -= ExtALU6Mem is ExtIndirectOp ; (extOp0=2 & extOp2=7 & extOpA & ExtALU6Mem) {
-    local extOrigOpA:2 = extOpA;
-    extOpA = extOpA - ExtALU6Mem;
-    setResultFlags(extOpA);
-    setSubtractFlags(extOrigOpA, ExtALU6Mem);
+:^extOpX -= ExtALU6Mem is ExtIndirectOp ; (extOp0=2 & extOp2=7 & extOpX & ExtALU6Mem) {
+    local extOrigOpX:2 = extOpX;
+    extOpX = extOpX - ExtALU6Mem;
+    setResultFlags(extOpX);
+    setSubtractFlags(extOrigOpX, ExtALU6Mem);
 }
 
 
@@ -1775,38 +1778,38 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
 # r8 -= [r9], carry
 # r8 -= ds:[r9], carry
 # Ext DS_Indirect 
-:^extOpA -= ExtIndirectOp, "carry" is ExtPrefix ; (extOp0=3 & extOp2=2 & extOpA & ExtIndirectOp) {
-    local origExtOpA:2 = extOpA;
-    extOpA = extOpA - ExtIndirectOp - zext(!C_flag);
-    setResultFlags(extOpA);
-    setSubtractCarryFlags(origExtOpA, ExtIndirectOp);
+:^extOpX -= ExtIndirectOp, "carry" is ExtPrefix ; (extOp0=3 & extOp2=2 & extOpX & ExtIndirectOp) {
+    local origExtOpX:2 = extOpX;
+    extOpX = extOpX - ExtIndirectOp - zext(!C_flag);
+    setResultFlags(extOpX);
+    setSubtractCarryFlags(origExtOpX, ExtIndirectOp);
 }
 
 # r8 -= imm6, carry
 # Ext IM6 
-:^extOpA -= extIM6, "carry" is ExtIndirectOp ; (extOp0=3 & extOp2=6 & extOpA & extIM6) {
-    local extOrigOpA:2 = extOpA;
-    extOpA = extOpA - extIM6 - zext(!C_flag);
-    setResultFlags(extOpA);
-    setSubtractCarryFlags(extOrigOpA, extIM6);
+:^extOpX -= extIM6, "carry" is ExtIndirectOp ; (extOp0=3 & extOp2=6 & extOpX & extIM6) {
+    local extOrigOpX:2 = extOpX;
+    extOpX = extOpX - extIM6 - zext(!C_flag);
+    setResultFlags(extOpX);
+    setSubtractCarryFlags(extOrigOpX, extIM6);
 }
 
 # r8 -= [bp + imm6], carry
 # Ext Base+Disp6
-:^extOpA -= ExtALU6BaseDisplacement, "carry" is ExtIndirectOp ; (extOp0=3 & extOp2=3 & extOpA & ExtALU6BaseDisplacement) {
-    local extOrigOpA:2 = extOpA;
-    extOpA = extOpA - ExtALU6BaseDisplacement - zext(!C_flag);
-    setResultFlags(extOpA);
-    setSubtractCarryFlags(extOrigOpA, ExtALU6BaseDisplacement);
+:^extOpX -= ExtALU6BaseDisplacement, "carry" is ExtIndirectOp ; (extOp0=3 & extOp2=3 & extOpX & ExtALU6BaseDisplacement) {
+    local extOrigOpX:2 = extOpX;
+    extOpX = extOpX - ExtALU6BaseDisplacement - zext(!C_flag);
+    setResultFlags(extOpX);
+    setSubtractCarryFlags(extOrigOpX, ExtALU6BaseDisplacement);
 }
 
 # r8 -= [imm6], carry
 # Ext A6
-:^extOpA -= ExtALU6Mem, "carry" is ExtIndirectOp ; (extOp0=3 & extOp2=7 & extOpA & ExtALU6Mem) {
-    local extOrigOpA:2 = extOpA;
-    extOpA = extOpA - ExtALU6Mem - zext(!C_flag);
-    setResultFlags(extOpA);
-    setSubtractCarryFlags(extOrigOpA, ExtALU6Mem);
+:^extOpX -= ExtALU6Mem, "carry" is ExtIndirectOp ; (extOp0=3 & extOp2=7 & extOpX & ExtALU6Mem) {
+    local extOrigOpX:2 = extOpX;
+    extOpX = extOpX - ExtALU6Mem - zext(!C_flag);
+    setResultFlags(extOpX);
+    setSubtractCarryFlags(extOrigOpX, ExtALU6Mem);
 }
 
 
@@ -1844,34 +1847,34 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
 # cmp r8, [r9]
 # cmp r8, ds:[r9]
 # Ext DS_Indirect 
-:cmp extOpA, ExtIndirectOp is ExtPrefix ; (extOp0=4 & extOp2=2 & extOpA & ExtIndirectOp) {
-    local res = extOpA - ExtIndirectOp;
+:cmp extOpX, ExtIndirectOp is ExtPrefix ; (extOp0=4 & extOp2=2 & extOpX & ExtIndirectOp) {
+    local res = extOpX - ExtIndirectOp;
     setResultFlags(res);
-    setSubtractFlags(extOpA, ExtIndirectOp);
+    setSubtractFlags(extOpX, ExtIndirectOp);
 }
 
 # cmp r8, imm6
 # Ext IM6 
-:cmp extOpA, extIM6 is ExtIndirectOp ; (extOp0=4 & extOp2=6 & extOpA & extIM6) {
-    local res = extOpA - extIM6;
+:cmp extOpX, extIM6 is ExtIndirectOp ; (extOp0=4 & extOp2=6 & extOpX & extIM6) {
+    local res = extOpX - extIM6;
     setResultFlags(res);
-    setSubtractFlags(extOpA, extIM6);
+    setSubtractFlags(extOpX, extIM6);
 }
 
 # cmp r8, [bp + imm6]
 # Ext Base+Disp6
-:cmp extOpA, ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=4 & extOp2=3 & extOpA & ExtALU6BaseDisplacement) {
-    local res = extOpA - ExtALU6BaseDisplacement;
+:cmp extOpX, ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=4 & extOp2=3 & extOpX & ExtALU6BaseDisplacement) {
+    local res = extOpX - ExtALU6BaseDisplacement;
     setResultFlags(res);
-    setSubtractFlags(extOpA, ExtALU6BaseDisplacement);
+    setSubtractFlags(extOpX, ExtALU6BaseDisplacement);
 }
 
 # cmp r8, [imm6]
 # Ext A6
-:cmp extOpA, ExtALU6Mem is ExtIndirectOp ; (extOp0=4 & extOp2=7 & extOpA & ExtALU6Mem) {
-    local res = extOpA - ExtALU6Mem;
+:cmp extOpX, ExtALU6Mem is ExtIndirectOp ; (extOp0=4 & extOp2=7 & extOpX & ExtALU6Mem) {
+    local res = extOpX - ExtALU6Mem;
     setResultFlags(res);
-    setSubtractFlags(extOpA, ExtALU6Mem);
+    setSubtractFlags(extOpX, ExtALU6Mem);
 }
 
 
@@ -1905,30 +1908,30 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
 # r8 = -[r9]
 # r8 = -ds:[r9]
 # Ext DS_Indirect 
-:^extOpA = -ExtIndirectOp is ExtPrefix ; (extOp0=6 & extOp2=2 & extOpA & ExtIndirectOp) {
-    extOpA = -ExtIndirectOp;
-    setResultFlags(extOpA);
+:^extOpX = -ExtIndirectOp is ExtPrefix ; (extOp0=6 & extOp2=2 & extOpX & ExtIndirectOp) {
+    extOpX = -ExtIndirectOp;
+    setResultFlags(extOpX);
 }
 
 # r8 = -imm6
 # Ext IM6 
-:^extOpA = -extIM6 is ExtIndirectOp ; (extOp0=6 & extOp2=6 & extOpA & extIM6) {
-    extOpA = -extIM6;
-    setResultFlags(extOpA);
+:^extOpX = -extIM6 is ExtIndirectOp ; (extOp0=6 & extOp2=6 & extOpX & extIM6) {
+    extOpX = -extIM6;
+    setResultFlags(extOpX);
 }
 
 # r8 = -[bp + imm6]
 # Ext Base+Disp6
-:^extOpA = -ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=6 & extOp2=3 & extOpA & ExtALU6BaseDisplacement) {
-    extOpA = -ExtALU6BaseDisplacement;
-    setResultFlags(extOpA);
+:^extOpX = -ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=6 & extOp2=3 & extOpX & ExtALU6BaseDisplacement) {
+    extOpX = -ExtALU6BaseDisplacement;
+    setResultFlags(extOpX);
 }
 
 # r8 = -[imm6]
 # Ext A6
-:^extOpA = -ExtALU6Mem is ExtIndirectOp ; (extOp0=6 & extOp2=7 & extOpA & ExtALU6Mem) {
-    extOpA = -ExtALU6Mem;
-    setResultFlags(extOpA);
+:^extOpX = -ExtALU6Mem is ExtIndirectOp ; (extOp0=6 & extOp2=7 & extOpX & ExtALU6Mem) {
+    extOpX = -ExtALU6Mem;
+    setResultFlags(extOpX);
 }
 
 
@@ -1962,30 +1965,30 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
 # r8 ^= [r9]
 # r8 ^= ds:[r9]
 # Ext DS_Indirect 
-:^extOpA "^"= ExtIndirectOp is ExtPrefix ; (extOp0=8 & extOp2=2 & extOpA & ExtIndirectOp) {
-    extOpA = extOpA ^ ExtIndirectOp;
-    setResultFlags(extOpA);
+:^extOpX "^"= ExtIndirectOp is ExtPrefix ; (extOp0=8 & extOp2=2 & extOpX & ExtIndirectOp) {
+    extOpX = extOpX ^ ExtIndirectOp;
+    setResultFlags(extOpX);
 }
 
 # r8 ^= imm6
 # Ext IM6 
-:^extOpA "^"= extIM6 is ExtIndirectOp ; (extOp0=8 & extOp2=6 & extOpA & extIM6) {
-    extOpA = extOpA ^ extIM6;
-    setResultFlags(extOpA);
+:^extOpX "^"= extIM6 is ExtIndirectOp ; (extOp0=8 & extOp2=6 & extOpX & extIM6) {
+    extOpX = extOpX ^ extIM6;
+    setResultFlags(extOpX);
 }
 
 # r8 ^= [bp + imm6]
 # Ext Base+Disp6
-:^extOpA "^"= ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=8 & extOp2=3 & extOpA & ExtALU6BaseDisplacement) {
-    extOpA = extOpA ^ ExtALU6BaseDisplacement;
-    setResultFlags(extOpA);
+:^extOpX "^"= ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=8 & extOp2=3 & extOpX & ExtALU6BaseDisplacement) {
+    extOpX = extOpX ^ ExtALU6BaseDisplacement;
+    setResultFlags(extOpX);
 }
 
 # r8 ^= [imm6]
 # Ext A6
-:^extOpA "^"= ExtALU6Mem is ExtIndirectOp ; (extOp0=8 & extOp2=7 & extOpA & ExtALU6Mem) {
-    extOpA = extOpA ^ ExtALU6Mem;
-    setResultFlags(extOpA);
+:^extOpX "^"= ExtALU6Mem is ExtIndirectOp ; (extOp0=8 & extOp2=7 & extOpX & ExtALU6Mem) {
+    extOpX = extOpX ^ ExtALU6Mem;
+    setResultFlags(extOpX);
 }
 
 
@@ -2019,30 +2022,30 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
 # r8 = [r9]
 # r8 = ds:[r9]
 # Ext DS_Indirect 
-:^extOpA = ExtIndirectOp is ExtPrefix ; (extOp0=9 & extOp2=2 & extOpA & ExtIndirectOp) {
-    extOpA = ExtIndirectOp;
-    setResultFlags(extOpA);
+:^extOpX = ExtIndirectOp is ExtPrefix ; (extOp0=9 & extOp2=2 & extOpX & ExtIndirectOp) {
+    extOpX = ExtIndirectOp;
+    setResultFlags(extOpX);
 }
 
 # r8 = imm6
 # Ext IM6 
-:^extOpA = extIM6 is ExtIndirectOp ; (extOp0=9 & extOp2=6 & extOpA & extIM6) {
-    extOpA = extIM6;
-    setResultFlags(extOpA);
+:^extOpX = extIM6 is ExtIndirectOp ; (extOp0=9 & extOp2=6 & extOpX & extIM6) {
+    extOpX = extIM6;
+    setResultFlags(extOpX);
 }
 
 # r8 = [bp + imm6]
 # Ext Base+Disp6
-:^extOpA = ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=9 & extOp2=3 & extOpA & ExtALU6BaseDisplacement) {
-    extOpA = ExtALU6BaseDisplacement;
-    setResultFlags(extOpA);
+:^extOpX = ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=9 & extOp2=3 & extOpX & ExtALU6BaseDisplacement) {
+    extOpX = ExtALU6BaseDisplacement;
+    setResultFlags(extOpX);
 }
 
 # r8 = [imm6]
 # Ext A6
-:^extOpA = ExtALU6Mem is ExtIndirectOp ; (extOp0=9 & extOp2=7 & extOpA & ExtALU6Mem) {
-    extOpA = ExtALU6Mem;
-    setResultFlags(extOpA);
+:^extOpX = ExtALU6Mem is ExtIndirectOp ; (extOp0=9 & extOp2=7 & extOpX & ExtALU6Mem) {
+    extOpX = ExtALU6Mem;
+    setResultFlags(extOpX);
 }
 
 
@@ -2076,30 +2079,30 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
 # r8 |= [r9]
 # r8 |= ds:[r9]
 # Ext DS_Indirect 
-:^extOpA |= ExtIndirectOp is ExtPrefix ; (extOp0=0xa & extOp2=2 & extOpA & ExtIndirectOp) {
-    extOpA = extOpA | ExtIndirectOp;
-    setResultFlags(extOpA);
+:^extOpX |= ExtIndirectOp is ExtPrefix ; (extOp0=0xa & extOp2=2 & extOpX & ExtIndirectOp) {
+    extOpX = extOpX | ExtIndirectOp;
+    setResultFlags(extOpX);
 }
 
 # r8 |= imm6
 # Ext IM6 
-:^extOpA |= extIM6 is ExtIndirectOp ; (extOp0=0xa & extOp2=6 & extOpA & extIM6) {
-    extOpA = extOpA | extIM6;
-    setResultFlags(extOpA);
+:^extOpX |= extIM6 is ExtIndirectOp ; (extOp0=0xa & extOp2=6 & extOpX & extIM6) {
+    extOpX = extOpX | extIM6;
+    setResultFlags(extOpX);
 }
 
 # r8 |= [bp + imm6]
 # Ext Base+Disp6
-:^extOpA |= ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=0xa & extOp2=3 & extOpA & ExtALU6BaseDisplacement) {
-    extOpA = extOpA | ExtALU6BaseDisplacement;
-    setResultFlags(extOpA);
+:^extOpX |= ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=0xa & extOp2=3 & extOpX & ExtALU6BaseDisplacement) {
+    extOpX = extOpX | ExtALU6BaseDisplacement;
+    setResultFlags(extOpX);
 }
 
 # r8 |= [imm6]
 # Ext A6
-:^extOpA |= ExtALU6Mem is ExtIndirectOp ; (extOp0=0xa & extOp2=7 & extOpA & ExtALU6Mem) {
-    extOpA = extOpA | ExtALU6Mem;
-    setResultFlags(extOpA);
+:^extOpX |= ExtALU6Mem is ExtIndirectOp ; (extOp0=0xa & extOp2=7 & extOpX & ExtALU6Mem) {
+    extOpX = extOpX | ExtALU6Mem;
+    setResultFlags(extOpX);
 }
 
 
@@ -2134,30 +2137,30 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
 # r8 &= [r9]
 # r8 &= ds:[r9]
 # Ext DS_Indirect 
-:^extOpA &= ExtIndirectOp is ExtPrefix ; (extOp0=0xb & extOp2=2 & extOpA & ExtIndirectOp) {
-    extOpA = extOpA & ExtIndirectOp;
-    setResultFlags(extOpA);
+:^extOpX &= ExtIndirectOp is ExtPrefix ; (extOp0=0xb & extOp2=2 & extOpX & ExtIndirectOp) {
+    extOpX = extOpX & ExtIndirectOp;
+    setResultFlags(extOpX);
 }
 
 # r8 &= imm6
 # Ext IM6 
-:^extOpA &= extIM6 is ExtIndirectOp ; (extOp0=0xb & extOp2=6 & extOpA & extIM6) {
-    extOpA = extOpA & extIM6;
-    setResultFlags(extOpA);
+:^extOpX &= extIM6 is ExtIndirectOp ; (extOp0=0xb & extOp2=6 & extOpX & extIM6) {
+    extOpX = extOpX & extIM6;
+    setResultFlags(extOpX);
 }
 
 # r8 &= [bp + imm6]
 # Ext Base+Disp6
-:^extOpA &= ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=0xb & extOp2=3 & extOpA & ExtALU6BaseDisplacement) {
-    extOpA = extOpA & ExtALU6BaseDisplacement;
-    setResultFlags(extOpA);
+:^extOpX &= ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=0xb & extOp2=3 & extOpX & ExtALU6BaseDisplacement) {
+    extOpX = extOpX & ExtALU6BaseDisplacement;
+    setResultFlags(extOpX);
 }
 
 # r8 &= [imm6]
 # Ext A6
-:^extOpA &= ExtALU6Mem is ExtIndirectOp ; (extOp0=0xb & extOp2=7 & extOpA & ExtALU6Mem) {
-    extOpA = extOpA & ExtALU6Mem;
-    setResultFlags(extOpA);
+:^extOpX &= ExtALU6Mem is ExtIndirectOp ; (extOp0=0xb & extOp2=7 & extOpX & ExtALU6Mem) {
+    extOpX = extOpX & ExtALU6Mem;
+    setResultFlags(extOpX);
 }
 
 
@@ -2192,29 +2195,29 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
 # test r8, [r9]
 # test r8, ds:[r9]
 # Ext DS_Indirect 
-:test extOpA, ExtIndirectOp is ExtPrefix ; (extOp0=0xc & extOp2=2 & extOpA & ExtIndirectOp) {
-    local res = extOpA & ExtIndirectOp;
+:test extOpX, ExtIndirectOp is ExtPrefix ; (extOp0=0xc & extOp2=2 & extOpX & ExtIndirectOp) {
+    local res = extOpX & ExtIndirectOp;
     setResultFlags(res);
 }
 
 # test r8, imm6
 # Ext IM6 
-:test extOpA, extIM6 is ExtIndirectOp ; (extOp0=0xc & extOp2=6 & extOpA & extIM6) {
-    local res = extOpA & extIM6;
+:test extOpX, extIM6 is ExtIndirectOp ; (extOp0=0xc & extOp2=6 & extOpX & extIM6) {
+    local res = extOpX & extIM6;
     setResultFlags(res);
 }
 
 # test r8, [bp + imm6]
 # Ext Base+Disp6
-:test extOpA, ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=0xc & extOp2=3 & extOpA & ExtALU6BaseDisplacement) {
-    local res = extOpA & ExtALU6BaseDisplacement;
+:test extOpX, ExtALU6BaseDisplacement is ExtIndirectOp ; (extOp0=0xc & extOp2=3 & extOpX & ExtALU6BaseDisplacement) {
+    local res = extOpX & ExtALU6BaseDisplacement;
     setResultFlags(res);
 }
 
 # test r8, [imm6]
 # Ext A6
-:test extOpA, ExtALU6Mem is ExtIndirectOp ; (extOp0=0xc & extOp2=7 & extOpA & ExtALU6Mem) {
-    local res = extOpA & ExtALU6Mem;
+:test extOpX, ExtALU6Mem is ExtIndirectOp ; (extOp0=0xc & extOp2=7 & extOpX & ExtALU6Mem) {
+    local res = extOpX & ExtALU6Mem;
     setResultFlags(res);
 }
 
@@ -2236,21 +2239,21 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
 # [r9] = r8
 # ds:[r9] = r8
 # Ext DS_Indirect 
-:^ExtIndirectOp = extOpA is ExtPrefix ; (extOp0=0xd & extOp2=2 & extOpA & ExtIndirectOp) {
-    ExtIndirectOp = extOpA;
+:^ExtIndirectOp = extOpX is ExtPrefix ; (extOp0=0xd & extOp2=2 & extOpX & ExtIndirectOp) {
+    ExtIndirectOp = extOpX;
     # does not update flags
 }
 
 # [bp+imm6] = r8
 # Ext Base+Disp6
-:^ExtALU6BaseDisplacement = extOpA is ExtIndirectOp ; (extOp0=0xd & extOp2=3 & extOpA & ExtALU6BaseDisplacement) {
-    ExtALU6BaseDisplacement = extOpA;
+:^ExtALU6BaseDisplacement = extOpX is ExtIndirectOp ; (extOp0=0xd & extOp2=3 & extOpX & ExtALU6BaseDisplacement) {
+    ExtALU6BaseDisplacement = extOpX;
     # does not update flags
 }
 
 # [imm6] = r8
 # Ext A6
-:^ExtALU6Mem = extOpA is ExtIndirectOp ; (extOp0=0xd & extOp2=7 & extOpA & ExtALU6Mem) {
-    ExtALU6Mem = extOpA;
+:^ExtALU6Mem = extOpX is ExtIndirectOp ; (extOp0=0xd & extOp2=7 & extOpX & ExtALU6Mem) {
+    ExtALU6Mem = extOpX;
     # does not update flags
 }
