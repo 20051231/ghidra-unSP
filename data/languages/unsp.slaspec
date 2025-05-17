@@ -73,6 +73,13 @@ define token instr(16)
         opA_9=(9, 9)
         opA_10=(10, 10)
     
+    opA_u1=(9, 11)
+    opA_u2=(9, 11)
+    opA_u3=(9, 11)
+    opA_u4=(9, 11)
+    opA_u5=(9, 11)
+    opA_u6=(9, 11)
+
     op1=(6, 8)
     opN=(3, 5)
         opFlag=(5, 5)
@@ -81,6 +88,8 @@ define token instr(16)
     opB_nosr=(0, 2)
     opB_v=(0, 2)
     opimm=(0, 5)
+
+    opMulSize=(3,6)
 
     opE1=(7, 8)
     opE2=(4, 6)
@@ -95,12 +104,20 @@ attach variables [ opA_nosr opB_nosr ] [ sp r1 r2 r3 r4 bp _ pc ];
 # Bizarrely shifted
 attach variables [ opA_p ] [ r1 r2 r3 r4 bp sr pc _ ];
 
+attach variables [ opA_u1 ] [ _ sp r1 r2 r3 r4 bp sr ];
+attach variables [ opA_u2 ] [ _ _ sp r1 r2 r3 r4 bp ];
+attach variables [ opA_u3 ] [ _ _ _ sp r1 r2 r3 r4 ];
+attach variables [ opA_u4 ] [ _ _ _ _ sp r1 r2 r3 ];
+attach variables [ opA_u5 ] [ _ _ _ _ _ sp r1 r2 ];
+attach variables [ opA_u6 ] [ _ _ _ _ _ _ sp r1 ];
+
 define token immtoken(16)
     imm16=(0,15);
 
 define pcodeop segment;    # Define special pcodeop that calculates the RAM address
                            # given the segment selector and offset as input
 define pcodeop exp;
+define pcodeop muls;
 
 # Tables for level of indirection so SR can be packed and unpacked
 UnpackSR: is epsilon {
@@ -1345,7 +1362,49 @@ with : op0=0xe & opE1=2 & opBitFlg=1 {
     r3 = res:2;
 }
 
-# TODO: inner product, division
+opMulSizeStr: "16" is opMulSize = 0 {
+    local size:1 = 16;
+    export size;
+}
+opMulSizeStr: "1" is opMulSize {
+    local size:1 = opMulSize;
+    export size;
+}
+
+# inner product
+# 85 f3
+# [ '1111', '0011', '1000', '0101' ]
+:"mr" = [opA] * [opB], "uu", opMulSizeStr is op0=0xe & opE1=0x1 & opA & opB & opMulSizeStr & opA_v != 7 {
+    local opASigned:1 = 0;
+    local opBSigned:1 = 0;
+    local opAAddr:3 = segment(0:1, opA);
+    local opBAddr:3 = segment(0:1, opB);
+    local res:4 = muls(opAAddr, opASigned, opBAddr, opBSigned, opMulSizeStr);
+    r3 = res:2;
+}
+
+:"mr" = [opA] * [opB], "us", opMulSizeStr is op0=0xf & opE1=0x1 & opA & opB & opMulSizeStr & opA_v != 7 {
+    local opASigned:1 = 0;
+    local opBSigned:1 = 1;
+    local opAAddr:3 = segment(0:1, opA);
+    local opBAddr:3 = segment(0:1, opB);
+    local res:4 = muls(opAAddr, opASigned, opBAddr, opBSigned, opMulSizeStr);
+    r4 = res(2);
+    r3 = res:2;
+}
+
+:"mr" = [opA] * [opB], "ss", opMulSizeStr is op0=0xf & opE1=0x3 & opA & opB & opMulSizeStr & opA_v != 7 {
+    local opASigned:1 = 1;
+    local opBSigned:1 = 1;
+    local opAAddr:3 = segment(0:1, opA);
+    local opBAddr:3 = segment(0:1, opB);
+    local res:4 = muls(opAAddr, opASigned, opBAddr, opBSigned, opMulSizeStr);
+    r4 = res(2);
+    r3 = res:2;
+}
+
+
+# TODO: division
 
 # Other
 # 1111|111|000|******
@@ -1441,10 +1500,82 @@ goto_addr: addr is op1=2 & op0=0xf & opimm ; imm16 [ addr=(opimm << 16) | imm16;
     opB = opB - 1;
 }
 
+macro pushStep(opB, reg_val) {
+    local stack_addr:3 = segment(0:1, opB);
+    *:2 stack_addr = reg_val;
+}
+
 # TODO replace opN, define properly in action section
-:push opA,opN "to" [opB] is op0=0xd & op1=2 & opA & opN & opB {
-    # TODO
-    sp = sp - opN;
+:push opA,2 "to" [opB] is op0=0xd & op1=2 & opA & opA_u1 & opN=2 & opB {
+    pushStep(opB, opA);
+    opB = opB - 1;
+    pushStep(opB, opA_u1);
+    opB = opB - 1;
+}
+
+:push opA,3 "to" [opB] is op0=0xd & op1=2 & opA & opA_u1 & opA_u2 & opN=3 & opB {
+    pushStep(opB, opA);
+    opB = opB - 1;
+    pushStep(opB, opA_u1);
+    opB = opB - 1;
+    pushStep(opB, opA_u2);
+    opB = opB - 1;
+}
+
+:push opA,4 "to" [opB] is op0=0xd & op1=2 & opA & opA_u1 & opA_u2 & opA_u3 & opN=4 & opB {
+    pushStep(opB, opA);
+    opB = opB - 1;
+    pushStep(opB, opA_u1);
+    opB = opB - 1;
+    pushStep(opB, opA_u2);
+    opB = opB - 1;
+    pushStep(opB, opA_u3);
+    opB = opB - 1;
+}
+
+:push opA,5 "to" [opB] is op0=0xd & op1=2 & opA & opA_u1 & opA_u2 & opA_u3 & opA_u4 & opN=5 & opB {
+    pushStep(opB, opA);
+    opB = opB - 1;
+    pushStep(opB, opA_u1);
+    opB = opB - 1;
+    pushStep(opB, opA_u2);
+    opB = opB - 1;
+    pushStep(opB, opA_u3);
+    opB = opB - 1;
+    pushStep(opB, opA_u4);
+    opB = opB - 1;
+}
+
+:push opA,6 "to" [opB] is op0=0xd & op1=2 & opA & opA_u1 & opA_u2 & opA_u3 & opA_u4 & opA_u5 & opN=6 & opB {
+    pushStep(opB, opA);
+    opB = opB - 1;
+    pushStep(opB, opA_u1);
+    opB = opB - 1;
+    pushStep(opB, opA_u2);
+    opB = opB - 1;
+    pushStep(opB, opA_u3);
+    opB = opB - 1;
+    pushStep(opB, opA_u4);
+    opB = opB - 1;
+    pushStep(opB, opA_u5);
+    opB = opB - 1;
+}
+
+:push opA,7 "to" [opB] is op0=0xd & op1=2 & opA & opA_u1 & opA_u2 & opA_u3 & opA_u4 & opA_u5 & opA_u6 & opN=7 & opB {
+    pushStep(opB, opA);
+    opB = opB - 1;
+    pushStep(opB, opA_u1);
+    opB = opB - 1;
+    pushStep(opB, opA_u2);
+    opB = opB - 1;
+    pushStep(opB, opA_u3);
+    opB = opB - 1;
+    pushStep(opB, opA_u4);
+    opB = opB - 1;
+    pushStep(opB, opA_u5);
+    opB = opB - 1;
+    pushStep(opB, opA_u6);
+    opB = opB - 1;
 }
 
 # u'nSP 2.0 extended instructions
