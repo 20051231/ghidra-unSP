@@ -70,6 +70,13 @@ define token instr(16)
     opA_nosr=(9, 11)
     opA_v=(9, 11)
     opA_p=(9, 11)
+    opA_p2=(9, 11)
+    opA_p3=(9, 11)
+    opA_p4=(9, 11)
+    opA_p5=(9, 11)
+    opA_p6=(9, 11)
+    opA_p7=(9, 11)
+
         opA_9=(9, 9)
         opA_10=(10, 10)
     
@@ -103,6 +110,12 @@ attach variables [ opA_r opB_r ] [ sp r1 r2 r3 r4 bp sr pc ];
 attach variables [ opA_nosr opB_nosr ] [ sp r1 r2 r3 r4 bp _ pc ];
 # Bizarrely shifted
 attach variables [ opA_p ] [ r1 r2 r3 r4 bp sr pc _ ];
+attach variables [ opA_p2 ] [ r2 r3 r4 bp sr pc _ _ ];
+attach variables [ opA_p3 ] [ r3 r4 bp sr pc _ _ _ ];
+attach variables [ opA_p4 ] [ r4 bp sr pc _ _ _ _ ];
+attach variables [ opA_p5 ] [ bp sr pc _ _ _ _ _ ];
+attach variables [ opA_p6 ] [ sr pc _ _ _ _ _ _ ];
+attach variables [ opA_p7 ] [ pc _ _ _ _ _ _ _ ];
 
 attach variables [ opA_u1 ] [ _ sp r1 r2 r3 r4 bp sr ];
 attach variables [ opA_u2 ] [ _ _ sp r1 r2 r3 r4 bp ];
@@ -1474,6 +1487,13 @@ goto_addr: addr is op1=2 & op0=0xf & opimm ; imm16 [ addr=(opimm << 16) | imm16;
     return [addr];
 }
 
+:reti is op1=2 & op0=9 & opA_v=5 & opN=3 & opB_v=0 & UnpackSR {
+    local stack_addr:3 = segment(0:1, sp);
+    local pc_low:2 = *:2 stack_addr;
+    local addr:3 = segment(cs, pc_low);
+    return [addr];
+}
+
 :pop "pc", "bp" "from" ["sp"] is op1=2 & op0=9 & opA_v=4 & opN=3 & opB_v=0 & UnpackSR {
     sp = sp + 1;
     local stack_addr:3 = segment(0:1, sp);
@@ -1489,10 +1509,153 @@ goto_addr: addr is op1=2 & op0=0xf & opimm ; imm16 [ addr=(opimm << 16) | imm16;
     return [addr];
 }
 
-:pop opA,opN "from" [opB] is op1=2 & op0=9 & opN & opA & opB {
-    # TODO
-    sp = sp + opN;
+:pop opA_p2,2 "from" [opB] is op1=2 & op0=9 & opN=2 & opA_p & opA_p2 & opB {
+    # Pop step
+    opB = opB + 1;
+    local stack_addr:3 = segment(0:1, opB);
+    opA_p = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p2 = *:2 stack_addr;
 }
+
+:pop opA_p3,3 "from" [opB] is op1=2 & op0=9 & opN=3 & opA_p & opA_p2 & opA_p3 & opB {
+    # Pop step
+    opB = opB + 1;
+    local stack_addr:3 = segment(0:1, opB);
+    opA_p = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p2 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p3 = *:2 stack_addr;
+}
+
+:pop opA_p4,4 "from" [opB] is op1=2 & op0=9 & opN=4 & opA_p & opA_p2 & opA_p3 & opA_p4 & opB {
+    # Pop step
+    opB = opB + 1;
+    local stack_addr:3 = segment(0:1, opB);
+    opA_p = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p2 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p3 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p4 = *:2 stack_addr;
+}
+
+:pop opA_p5,5 "from" [opB] is op1=2 & op0=9 & opN=5 & opA_p & opA_p2 & opA_p3 & opA_p4 & opA_p5 & opB {
+    # Pop step
+    opB = opB + 1;
+    local stack_addr:3 = segment(0:1, opB);
+    opA_p = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p2 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p3 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p4 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p5 = *:2 stack_addr;
+}
+
+:pop opA_p6,6 "from" [opB] is op1=2 & op0=9 & opN=6 & opA_p & opA_p2 & opA_p3 & opA_p4 & opA_p5 & opA_p6 & opB {
+    # Pop step
+    opB = opB + 1;
+    local stack_addr:3 = segment(0:1, opB);
+    opA_p = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p2 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p3 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p4 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p5 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p6 = *:2 stack_addr;
+}
+
+:pop opA_p7,7 "from" [opB] is op1=2 & op0=9 & opN=7 & opA_p & opA_p2 & opA_p3 & opA_p4 & opA_p5 & opA_p6 & opA_p7 & opB {
+    # Pop step
+    opB = opB + 1;
+    local stack_addr:3 = segment(0:1, opB);
+    opA_p = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p2 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p3 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p4 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p5 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p6 = *:2 stack_addr;
+
+    # Pop step
+    opB = opB + 1;
+    stack_addr = segment(0:1, opB);
+    opA_p7 = *:2 stack_addr;
+}
+
 
 :push opA "to" [opB] is op1=2 & op0=0xd & opN=1 & opB & opA {
     local stack_addr:3 = segment(0:1, opB);
