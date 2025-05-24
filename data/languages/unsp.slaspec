@@ -1753,6 +1753,21 @@ define token extinstr(16)
     extRx=(9, 11)
     extRy=(0, 2)
 
+    extRx_p1=(9,11)
+    extRx_p2=(9,11)
+    extRx_p3=(9,11)
+    extRx_p4=(9,11)
+    extRx_p5=(9,11)
+    extRx_p6=(9,11)
+    extRx_p7=(9,11)
+
+    extRx_u1=(9,11)
+    extRx_u2=(9,11)
+    extRx_u3=(9,11)
+    extRx_u4=(9,11)
+    extRx_u5=(9,11)
+    extRx_u6=(9,11)
+
     extOp1=(4, 7)
     extOp1Ext=(4, 8)
 
@@ -1765,6 +1780,9 @@ define token extinstr(16)
 
     extIM6=(0, 5)
     extA6=(0, 5)
+
+    extPushSize=(12,14)
+    extPushMode=(15,15)
 ;
 
 attach variables [ extRa extRb ] [ sp r1 r2 r3 r4 bp sr pc r8 r9 r10 r11 r12 r13 r14 r15 ];
@@ -1775,6 +1793,22 @@ extOpB: extRb is extRb { export extRb; }
 
 extOpX: extRx is extRx { export extRx; }
 extOpY: extRy is extRy { export extRy; }
+
+# Bizarrely shifted
+attach variables [ extRx_p1 ] [ r9 r10 r11 r12 r13 r14 r15 r8];
+attach variables [ extRx_p2 ] [ r10 r11 r12 r13 r14 r15 r8 r9 ];
+attach variables [ extRx_p3 ] [ r11 r12 r13 r14 r15 r8 r9 r10 ];
+attach variables [ extRx_p4 ] [ r12 r13 r14 r15 r8 r9 r10 r11 ];
+attach variables [ extRx_p5 ] [ r13 r14 r15 r8 r9 r10 r11 r12 ];
+attach variables [ extRx_p6 ] [ r14 r15 r8 r9 r10 r11 r12 r13 ];
+attach variables [ extRx_p7 ] [ r15 r8 r9 r10 r11 r12 r13 r14 ];
+
+attach variables [ extRx_u1] [ _ r8 r9 r10 r11 r12 r13 r14 ];
+attach variables [ extRx_u2] [ _ _ r8 r9 r10 r11 r12 r13 ];
+attach variables [ extRx_u3] [ _ _ _ r8 r9 r10 r11 r12 ];
+attach variables [ extRx_u4] [ _ _ _ _ r8 r9 r10 r11 ]; 
+attach variables [ extRx_u5] [ _ _ _ _ _ r8 r9 r10 ];
+attach variables [ extRx_u6] [ _ _ _ _ _ _ r8 r9 ];
 
 # Ext ALU6
 
@@ -2551,3 +2585,238 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
     ExtALU6Mem = extOpX;
     # does not update flags
 }
+
+# ext push
+:push extOpX "to" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=1 & extPushSize=1 & extOpB & extOpX) {
+    pushStep(extOpB, extOpX);
+    extOpB = extOpB - 1;
+}
+
+:push extOpX,2 "to" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=1 & extPushSize=2 & extOpB & extOpX & extRx_u1) {
+    pushStep(extOpB, extOpX);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u1);
+    extOpB = extOpB - 1;
+}
+
+:push extOpX,3 "to" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=1 & extPushSize=3 & extOpB & extOpX & extRx_u1 & extRx_u2) {
+    pushStep(extOpB, extOpX);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u1);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u2);
+    extOpB = extOpB - 1;
+}
+
+:push extOpX,4 "to" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=1 & extPushSize=4 & extOpB & extOpX & extRx_u1 & extRx_u2 & extRx_u3) {
+    pushStep(extOpB, extOpX);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u1);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u2);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u3);
+    extOpB = extOpB - 1;
+}
+
+:push extOpX,5 "to" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=1 & extPushSize=5 & extOpB & extOpX & extRx_u1 & extRx_u2 & extRx_u3 & extRx_u4) {
+    pushStep(extOpB, extOpX);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u1);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u2);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u3);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u4);
+    extOpB = extOpB - 1;
+}
+
+:push extOpX,6 "to" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=1 & extPushSize=6 & extOpB & extOpX & extRx_u1 & extRx_u2 & extRx_u3 & extRx_u4 & extRx_u5) {
+    pushStep(extOpB, extOpX);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u1);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u2);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u3);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u4);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u5);
+    extOpB = extOpB - 1;
+}
+
+:push extOpX,7 "to" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=1 & extPushSize=7 & extOpB & extOpX & extRx_u1 & extRx_u2 & extRx_u3 & extRx_u4 & extRx_u5 & extRx_u6) {
+    pushStep(extOpB, extOpX);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u1);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u2);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u3);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u4);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u5);
+    extOpB = extOpB - 1;
+    pushStep(extOpB, extRx_u6);
+    extOpB = extOpB - 1;
+}
+
+# ext pop
+
+:pop extRx_p1 "from" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=0 & extPushSize=1 & extOpB & extRx_p1) {
+    # Pop step
+    extOpB = extOpB + 1;
+    local stack_addr:3 = segment(0:1, extOpB);
+    extRx_p1 = *:2 stack_addr;
+}
+
+:pop extRx_p2,2 "from" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=0 & extPushSize=2 & extOpB & extRx_p1 & extRx_p2) {
+    # Pop step
+    extOpB = extOpB + 1;
+    local stack_addr:3 = segment(0:1, extOpB);
+    extRx_p1 = *:2 stack_addr;
+    
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p2 = *:2 stack_addr;
+}
+
+:pop extRx_p3,3 "from" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=0 & extPushSize=3 & extOpB & extRx_p1 & extRx_p2 & extRx_p3) {
+    # Pop step
+    extOpB = extOpB + 1;
+    local stack_addr:3 = segment(0:1, extOpB);
+    extRx_p1 = *:2 stack_addr;
+    
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p2 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p3 = *:2 stack_addr;
+}
+
+:pop extRx_p4,4 "from" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=0 & extPushSize=4 & extOpB & extRx_p1 & extRx_p2 & extRx_p3 & extRx_p4) {
+    # Pop step
+    extOpB = extOpB + 1;
+    local stack_addr:3 = segment(0:1, extOpB);
+    extRx_p1 = *:2 stack_addr;
+    
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p2 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p3 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p4 = *:2 stack_addr;
+}
+
+:pop extRx_p5,5 "from" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=0 & extPushSize=5 & extOpB & extRx_p1 & extRx_p2 & extRx_p3 & extRx_p4 & extRx_p5) {
+    # Pop step
+    extOpB = extOpB + 1;
+    local stack_addr:3 = segment(0:1, extOpB);
+    extRx_p1 = *:2 stack_addr;
+    
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p2 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p3 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p4 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p5 = *:2 stack_addr;
+}
+
+:pop extRx_p6,6 "from" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=0 & extPushSize=6 & extOpB & extRx_p1 & extRx_p2 & extRx_p3 & extRx_p4 & extRx_p5 & extRx_p6) {
+    # Pop step
+    extOpB = extOpB + 1;
+    local stack_addr:3 = segment(0:1, extOpB);
+    extRx_p1 = *:2 stack_addr;
+    
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p2 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p3 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p4 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p5 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p6 = *:2 stack_addr;
+}
+
+:pop extRx_p7,7 "from" [extOpB] is ExtPrefix; (extOp1Ext=2 & extPushMode=0 & extPushSize=7 & extOpB & extRx_p1 & extRx_p2 & extRx_p3 & extRx_p4 & extRx_p5 & extRx_p6 & extRx_p7) {
+    # Pop step
+    extOpB = extOpB + 1;
+    local stack_addr:3 = segment(0:1, extOpB);
+    extRx_p1 = *:2 stack_addr;
+    
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p2 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p3 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p4 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p5 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p6 = *:2 stack_addr;
+
+    # Pop step
+    extOpB = extOpB + 1;
+    stack_addr = segment(0:1, extOpB);
+    extRx_p7 = *:2 stack_addr;
+}
+
