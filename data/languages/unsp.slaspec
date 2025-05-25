@@ -1012,6 +1012,27 @@ DataOpA16: "ds:"[imm16] is imm16 {
     export *:2 addr;
 }
 
+# Register BITOP
+:tstb opA, opB is op0 = 0xe & opA & op1=0 & opBitFlg=0 & opBitFn=0 & opB {
+    local mask = 1 << opB;
+    Z_flag = (opA & mask) == 0;
+}
+
+:setb opA, opB is op0 = 0xe & opA & op1=0 & opBitFlg=0 & opBitFn=1 & opB {
+    local mask = 1 << opB;
+    opA = opA | mask;
+}
+
+:clrb opA, opB is op0 = 0xe & opA & op1=0 & opBitFlg=0 & opBitFn=2 & opB {
+    local mask = 1 << opB;
+    opA = opA & ~mask;
+}
+
+:invb opA, opB is op0 = 0xe & opA & op1=0 & opBitFlg=0 & opBitFn=3 & opB {
+    local mask = 1 << opB;
+    opA = opA ^ mask;
+}
+
 # Memory BITOP A16, u'nSP 2.0
 :tstb StackOpA16, opBitN is opA_9=1 & opA_10=0 & op1=1 & opBitFn=0 & opBitN ; StackOpA16 {
     local mask = 1 << opBitN;
@@ -1488,7 +1509,12 @@ goto_addr: addr is op1=2 & op0=0xf & opimm ; imm16 [ addr=(opimm << 16) | imm16;
 }
 
 :reti is op1=2 & op0=9 & opA_v=5 & opN=3 & opB_v=0 & UnpackSR {
+    sp = sp + 1;
     local stack_addr:3 = segment(0:1, sp);
+    sr = *:2 stack_addr;
+    build UnpackSR;
+    sp = sp + 1;
+    stack_addr = segment(0:1, sp);
     local pc_low:2 = *:2 stack_addr;
     local addr:3 = segment(cs, pc_low);
     return [addr];
@@ -2563,6 +2589,13 @@ ExtALU6Mem: ""[extIM6] is extIM6 { export *:2 extIM6; }
     Bank0Mem = extOpA;
     # does not update flags
 }
+
+# r8 = [imm]
+:^Bank0Mem = extOpA "store" is ExtPrefix ; (extOp0=0xd & extOp1=7 & extOpA) ; Bank0Mem {
+    Bank0Mem = extOpA;
+    # does not update flags
+}
+
 
 # [r9] = r8
 # ds:[r9] = r8
