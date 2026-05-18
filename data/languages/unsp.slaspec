@@ -1152,12 +1152,12 @@ Bank0Mem: ""[imm16] is imm16 { export *:2 imm16; }
 :cmp opB, imm16 is (op0=4 & op1=4 & opN=1 & opA & opB) ; imm16 {
     local res = opB - imm16;
     setResultFlags(res);
-    setSubtractCarryFlags(opB, imm16);
+    setSubtractFlags(opB, imm16);
 }
 :cmp opB, Bank0Mem is (op0=4 & op1=4 & opN=2 & opA & opB) ; Bank0Mem {
     local res = opB - Bank0Mem;
     setResultFlags(res);
-    setSubtractCarryFlags(opB, Bank0Mem);
+    setSubtractFlags(opB, Bank0Mem);
 }
 # r1 = -0x1234
 :^opA = -imm16 is (op0=6 & op1=4 & opN=1 & opA & UnpackSR_opA) ; imm16 {
@@ -1374,6 +1374,20 @@ with : op0=0xe & opE1=2 & opBitFlg=1 {
         r3 = r3 | full:2;
         r4 = opARead >> opB;
     }
+    # 1110|***|110|**|1|***
+    :^opARead "rol" opB is opE2=6 & opARead & UnpackSR_opA & opB {
+        if(opB==0) goto inst_next;
+        local n:2 = opB & 15;
+        opARead = (opARead << n) | (opARead >> (16 - n));
+        build UnpackSR_opA;
+    }
+    # 1110|***|111|**|1|***
+    :^opARead "ror" opB is opE2=7 & opARead & UnpackSR_opA & opB {
+        if(opB==0) goto inst_next;
+        local n:2 = opB & 15;
+        opARead = (opARead >> n) | (opARead << (16 - n));
+        build UnpackSR_opA;
+    }
 }
 
 # Multiplication
@@ -1414,6 +1428,7 @@ opMulSizeStr: "1" is opMulSize {
     local opAAddr:3 = segment(0:1, opA);
     local opBAddr:3 = segment(0:1, opB);
     local res:4 = muls(opAAddr, opASigned, opBAddr, opBSigned, opMulSizeStr);
+    r4 = res(2);
     r3 = res:2;
 }
 
